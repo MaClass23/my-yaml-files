@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  mongo-express-app
+  namespace: my-namespace
+  labels:
+    app:  mongo-app
+spec:
+  selector:
+    matchLabels:
+      app: mongo-app
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app:  mongo-app
+    spec:
+      # initContainers:
+        # Init containers are exactly like regular containers, except:
+          # - Init containers always run to completion.
+          # - Each init container must complete successfully before the next one starts.
+      containers:
+      - name:  mongo-express-app
+        image:  mongo-express
+        ports:
+        - containerPort: 8081
+        env: 
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          valueFrom: 
+            secretKeyRef:
+              name: mongdb-secret
+              key: mongo-root-username
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mongdb-secret
+              key: mongo-root-password
+        - name: ME_CONFIG_MONGODB_SERVER
+          valueFrom: 
+            configMapKeyRef:
+              name: mongdb-configmap
+              key: database_url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express-service
+  namespace: my-namespace
+spec:
+  selector:
+    app: mongo-app
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+      nodePort: 31000   # 30000-32767
+    

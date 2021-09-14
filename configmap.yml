@@ -1,0 +1,8 @@
+# This must be created(should already be in the cluster) 
+# before it can be referenced in a deployment
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: mongodb-configmap
+  namespace: my-nammespace
+data_url: mongodb-service
